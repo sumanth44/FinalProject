@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Home - AI-Powered Attendance System{% endblock %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="text-4xl font-bold text-gray-900 mb-8">AI-Powered Attendance System</h1>
+    <p class="text-xl text-gray-600 mb-12">Automated attendance marking using real-time face detection</p>
+    
+    <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <!-- Admin Panel Card -->
+        <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+            <div class="text-center">
+                <div class="bg-primary text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Admin Panel</h3>
+                <p class="text-gray-600 mb-4">Manage users, add face images, and view attendance records</p>
+                <a href="{{ url_for('admin_panel') }}" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-secondary transition-colors inline-block">Go to Admin Panel</a>
+            </div>
+        </div>
+
+        <!-- Mark Attendance Card -->
+        <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+            <div class="text-center">
+                <div class="bg-accent text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Mark Attendance</h3>
+                <p class="text-gray-600 mb-4">Use webcam to detect faces and mark attendance automatically</p>
+                <a href="{{ url_for('attendance') }}" class="bg-accent text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors inline-block">Start Attendance</a>
+            </div>
+        </div>
+
+        <!-- Attendance Logs Card -->
+        <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+            <div class="text-center">
+                <div class="bg-purple-500 text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Attendance Logs</h3>
+                <p class="text-gray-600 mb-4">View and export attendance history and reports</p>
+                <a href="{{ url_for('attendance_logs') }}" class="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 transition-colors inline-block">View Logs</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="mt-16">
+        <h2 class="text-3xl font-bold text-gray-900 mb-8">Key Features</h2>
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            <div class="text-center">
+                <div class="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h4 class="font-semibold text-gray-900">Real-time Detection</h4>
+                <p class="text-sm text-gray-600">Advanced YOLOv8 face detection</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <h4 class="font-semibold text-gray-900">Easy Management</h4>
+                <p class="text-sm text-gray-600">Simple admin interface</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <h4 class="font-semibold text-gray-900">Secure & Private</h4>
+                <p class="text-sm text-gray-600">Local data storage</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-yellow-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <h4 class="font-semibold text-gray-900">Export Reports</h4>
+                <p class="text-sm text-gray-600">CSV export functionality</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

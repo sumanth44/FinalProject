@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard - AI-Powered Attendance System{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+        <a href="{{ url_for('admin_panel') }}" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-secondary transition-colors">
+            Back to Admin
+        </a>
+    </div>
+
+    <!-- Overall Statistics -->
+    <div class="grid md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total Users</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ overall_stats[0] or 0 }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Total Records</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ overall_stats[1] or 0 }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Present Count</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ overall_stats[2] or 0 }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Absent Count</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ overall_stats[3] or 0 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid lg:grid-cols-2 gap-8 mb-8">
+        <!-- Daily Attendance Overview -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Daily Attendance Overview (Last 30 Days)</h3>
+            <div id="dailyOverviewChart" class="h-64">
+                <div class="flex items-center justify-center h-full text-gray-500">
+                    Loading chart...
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Distribution -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Attendance Distribution</h3>
+            <div id="attendanceDistributionChart" class="h-64">
+                <div class="flex items-center justify-center h-full text-gray-500">
+                    Loading chart...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Performance Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">User Performance</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Records</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Present Count</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance Rate</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for user in user_stats %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ user[0] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user[1] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user[2] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {% if user[1] > 0 %}
+                                {{ "%.1f"|format((user[2] / user[1] * 100)) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="/user/{{ loop.index }}" class="text-primary hover:text-secondary">View Details</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if not user_stats %}
+        <div class="text-center py-8">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+            </div>
+            <p class="text-gray-500">No user data available</p>
+            <p class="text-sm text-gray-400">Add users and mark attendance to see analytics</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+// Load analytics data
+async function loadAnalytics() {
+    try {
+        // Create daily overview chart
+        const dailyData = {{ daily_stats | tojson }};
+        
+        if (dailyData && dailyData.length > 0) {
+            const dates = dailyData.map(d => d[0]);
+            const uniqueUsers = dailyData.map(d => d[1]);
+            const presentCount = dailyData.map(d => d[2]);
+            
+            const dailyChart = {
+                data: [
+                    {
+                        x: dates,
+                        y: uniqueUsers,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: 'Unique Users',
+                        line: {color: '#3B82F6', width: 3}
+                    },
+                    {
+                        x: dates,
+                        y: presentCount,
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        name: 'Present Count',
+                        line: {color: '#10B981', width: 3}
+                    }
+                ],
+                layout: {
+                    title: 'Daily Attendance Overview',
+                    xaxis: {title: 'Date'},
+                    yaxis: {title: 'Count'},
+                    template: 'plotly_white'
+                }
+            };
+            
+            Plotly.newPlot('dailyOverviewChart', dailyChart.data, dailyChart.layout, {responsive: true});
+        } else {
+            document.getElementById('dailyOverviewChart').innerHTML = '<div class="text-center text-gray-500">No data available</div>';
+        }
+        
+        // Create attendance distribution chart
+        const presentCount = {{ overall_stats[2] or 0 }};
+        const absentCount = {{ overall_stats[3] or 0 }};
+        
+        if (presentCount > 0 || absentCount > 0) {
+            const distributionChart = {
+                data: [{
+                    values: [presentCount, absentCount],
+                    labels: ['Present', 'Absent'],
+                    type: 'pie',
+                    marker: {
+                        colors: ['#10B981', '#EF4444']
+                    }
+                }],
+                layout: {
+                    title: 'Attendance Distribution',
+                    template: 'plotly_white'
+                }
+            };
+            
+            Plotly.newPlot('attendanceDistributionChart', distributionChart.data, distributionChart.layout, {responsive: true});
+        } else {
+            document.getElementById('attendanceDistributionChart').innerHTML = '<div class="text-center text-gray-500">No data available</div>';
+        }
+        
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+        document.getElementById('dailyOverviewChart').innerHTML = '<div class="text-center text-red-500">Error loading chart</div>';
+        document.getElementById('attendanceDistributionChart').innerHTML = '<div class="text-center text-red-500">Error loading chart</div>';
+    }
+}
+
+// Load analytics when page loads
+document.addEventListener('DOMContentLoaded', loadAnalytics);
+</script>
+{% endblock %}

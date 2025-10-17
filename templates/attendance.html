@@ -1,0 +1,612 @@
+{% extends "base.html" %}
+
+{% block title %}Mark Attendance - AI-Powered Attendance System{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">Mark Attendance</h1>
+        <p class="text-gray-600">Position your face in front of the camera for automatic detection</p>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Camera Feed -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Camera Feed</h2>
+            <div class="relative">
+                <video id="video" width="100%" height="300" autoplay muted class="rounded-lg bg-gray-100"></video>
+                <canvas id="canvas" class="hidden"></canvas>
+                <div id="status" class="absolute top-4 left-4 bg-black bg-opacity-75 text-white px-3 py-1 rounded text-sm">
+                    Initializing camera...
+                </div>
+            </div>
+            <div class="mt-4 flex justify-center space-x-4">
+                <button id="startBtn" onclick="startDetection()" 
+                        class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-secondary transition-colors">
+                    Start Detection
+                </button>
+                <button id="stopBtn" onclick="stopDetection()" 
+                        class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors" disabled>
+                    Stop Detection
+                </button>
+            </div>
+        </div>
+
+        <!-- Detection Results -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Detection Results</h2>
+            
+            <!-- No Face Detected -->
+            <div id="noFace" class="text-center py-8">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                </div>
+                <p class="text-gray-500">No face detected</p>
+                <p class="text-sm text-gray-400">Position your face in front of the camera</p>
+            </div>
+
+            <!-- Face Detected -->
+            <div id="faceDetected" class="hidden">
+                <div class="text-center py-4">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <p class="text-green-600 font-medium">Face detected!</p>
+                </div>
+            </div>
+
+            <!-- Multiple Faces Detected -->
+            <div id="multipleFaces" class="hidden">
+                <div class="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+                    <h3 class="font-semibold text-gray-900 mb-4">Multiple Faces Detected</h3>
+                    <div id="facesList" class="space-y-3 mb-4">
+                        <!-- Multiple face cards will be populated here -->
+                    </div>
+                    <div class="flex space-x-3">
+                        <button id="markAllBtn" onclick="markAllAttendance()" 
+                                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            Mark All Attendance
+                        </button>
+                        <button id="rejectAllBtn" onclick="rejectAllAttendance()" 
+                                class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Single User Confirmation -->
+            <div id="userConfirmation" class="hidden">
+                <div class="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+                    <h3 class="font-semibold text-gray-900 mb-2">Confirm Identity</h3>
+                    <div id="userInfo" class="mb-4">
+                        <!-- User details will be populated here -->
+                    </div>
+                    <div class="flex space-x-3">
+                        <button id="confirmBtn" onclick="confirmAttendance()" 
+                                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            Yes, Mark Attendance
+                        </button>
+                        <button id="rejectBtn" onclick="rejectAttendance()" 
+                                class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                            No, Not Me
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Success -->
+            <div id="attendanceSuccess" class="hidden">
+                <div class="text-center py-4">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <p class="text-green-600 font-medium">Attendance marked successfully!</p>
+                    <p class="text-sm text-gray-500 mt-1" id="attendanceTime"></p>
+                </div>
+            </div>
+
+            <!-- Already Marked Today -->
+            <div id="alreadyMarked" class="hidden">
+                <div class="text-center py-4">
+                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                    <p class="text-yellow-600 font-medium">Attendance already marked for today!</p>
+                    <p class="text-sm text-gray-500 mt-1" id="alreadyMarkedTime"></p>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="hidden">
+                <div class="text-center py-4">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </div>
+                    <p class="text-red-600 font-medium" id="errorText">An error occurred</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="mt-8 bg-blue-50 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">Instructions</h3>
+        <ul class="list-disc list-inside space-y-2 text-gray-700">
+            <li>Make sure you have good lighting on your face</li>
+            <li>Look directly at the camera</li>
+            <li>Keep your face centered in the frame</li>
+            <li>Wait for the system to detect and recognize your face</li>
+            <li>For multiple people: The system will detect all faces and let you select which ones to mark attendance for</li>
+            <li>Confirm your identity when prompted (single person) or select people to mark (multiple people)</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+let video, canvas, ctx;
+let isDetecting = false;
+let users = [];
+let currentUser = null;
+let detectedFaces = [];
+let processedToday = new Set();
+
+// Initialize camera
+async function initCamera() {
+    try {
+        video = document.getElementById('video');
+        canvas = document.getElementById('canvas');
+        ctx = canvas.getContext('2d');
+        
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: 640, 
+                height: 480,
+                facingMode: 'user'
+            } 
+        });
+        
+        video.srcObject = stream;
+        video.play();
+        
+        updateStatus('Camera ready');
+        document.getElementById('startBtn').disabled = false;
+        
+        // Load users data
+        await loadUsers();
+        
+    } catch (error) {
+        console.error('Error accessing camera:', error);
+        updateStatus('Camera access denied');
+    }
+}
+
+// Load users from server
+async function loadUsers() {
+    try {
+        const response = await fetch('/get_users');
+        users = await response.json();
+        console.log('Loaded users:', users.length);
+    } catch (error) {
+        console.error('Error loading users:', error);
+    }
+}
+
+// Start face detection
+function startDetection() {
+    if (users.length === 0) {
+        showError('No users registered. Please add users first in the admin panel.');
+        return;
+    }
+    
+    isDetecting = true;
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
+    updateStatus('Detecting faces...');
+    
+    detectFaces();
+}
+
+// Stop face detection
+function stopDetection() {
+    isDetecting = false;
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
+    updateStatus('Detection stopped');
+    
+    // Hide all result divs
+    hideAllResults();
+}
+
+// Face detection loop
+async function detectFaces() {
+    if (!isDetecting) return;
+    
+    try {
+        // Capture frame
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        
+        // Convert to base64 for face recognition
+        const imageData = canvas.toDataURL('image/jpeg', 0.8); // Lower quality for faster processing
+        
+        console.log('Sending image for face detection...');
+        updateStatus('Analyzing face...');
+        
+        // Real face detection using backend API
+        const detectionResult = await detectFaceInImage(imageData);
+        
+        if (detectionResult && detectionResult.faces && detectionResult.faces.length > 0) {
+            console.log('Faces detected:', detectionResult);
+            detectedFaces = detectionResult.faces;
+            
+            if (detectionResult.count === 1) {
+                // Show single user card and auto-mark
+                showUserConfirmation(detectedFaces[0]);
+                autoMarkFaces([detectedFaces[0]]);
+            } else {
+                // Show multiple user cards and auto-mark each
+                showMultipleFaces(detectedFaces);
+                autoMarkFaces(detectedFaces);
+            }
+        } else {
+            showNoFace();
+        }
+        
+    } catch (error) {
+        console.error('Detection error:', error);
+        showError('Detection failed. Please try again.');
+    }
+    
+    // Continue detection loop
+    if (isDetecting) {
+        setTimeout(detectFaces, 2000); // Slower detection for better accuracy
+    }
+}
+
+// Real face detection using backend API
+async function detectFaceInImage(imageData) {
+    try {
+        console.log('Sending request to /detect_face...');
+        const response = await fetch('/detect_face', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ image: imageData })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Face detection response:', result);
+        
+        if (result.success) {
+            return result;
+        } else {
+            console.log('Face detection result:', result.message);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error in face detection:', error);
+        return null;
+    }
+}
+
+// Show multiple faces detected
+function showMultipleFaces(faces) {
+    hideAllResults();
+    document.getElementById('multipleFaces').classList.remove('hidden');
+    
+    const facesList = document.getElementById('facesList');
+    facesList.innerHTML = '';
+    
+    faces.forEach((face, index) => {
+        const faceCard = document.createElement('div');
+        faceCard.className = 'border border-gray-200 rounded-lg p-3 bg-white';
+        faceCard.innerHTML = `
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="font-medium text-gray-900">${face.name}</p>
+                    <p class="text-sm text-gray-500">Phone: ${face.phone}</p>
+                    <p class="text-sm text-gray-500">Confidence: ${(face.confidence * 100).toFixed(1)}%</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span id="status_${face.user_id}" class="text-sm text-blue-600">Marking...</span>
+                </div>
+            </div>
+        `;
+        facesList.appendChild(faceCard);
+    });
+    
+    updateStatus(`${faces.length} faces detected - select which ones to mark`);
+}
+
+// Show user confirmation dialog (single face)
+function showUserConfirmation(user) {
+    hideAllResults();
+    document.getElementById('userConfirmation').classList.remove('hidden');
+    
+    document.getElementById('userInfo').innerHTML = `
+        <div class="text-sm">
+            <p><strong>Name:</strong> ${user.name}</p>
+            <p><strong>Phone:</strong> ${user.phone}</p>
+            <p><strong>ID:</strong> ${user.user_id}</p>
+            <p><strong>Confidence:</strong> ${(user.confidence * 100).toFixed(1)}%</p>
+        </div>
+    `;
+    
+    currentUser = user;
+    // Replace buttons with inline status for auto-marking UX
+    const confirmBtn = document.getElementById('confirmBtn');
+    const rejectBtn = document.getElementById('rejectBtn');
+    if (confirmBtn) confirmBtn.style.display = 'none';
+    if (rejectBtn) rejectBtn.style.display = 'none';
+    // Ensure a status span exists
+    let singleStatus = document.getElementById('singleStatus');
+    if (!singleStatus) {
+        singleStatus = document.createElement('span');
+        singleStatus.id = 'singleStatus';
+        singleStatus.className = 'text-sm text-blue-600';
+        // Insert after the hidden buttons container
+        const buttonsContainer = confirmBtn ? confirmBtn.parentElement : null;
+        if (buttonsContainer) {
+            buttonsContainer.appendChild(singleStatus);
+        }
+    }
+    singleStatus.textContent = 'Marking...';
+    updateStatus('Face recognized - marking attendance...');
+}
+
+// Confirm attendance
+async function confirmAttendance() {
+    if (!currentUser) return;
+    
+    try {
+        const response = await fetch('/mark_attendance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_id: currentUser.user_id })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAttendanceSuccess();
+        } else {
+            if (result.message === 'Attendance already marked today') {
+                showAlreadyMarked(result.marked_time);
+            } else {
+                showError(result.message);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error marking attendance:', error);
+        showError('Failed to mark attendance. Please try again.');
+    }
+}
+
+// Auto mark attendance for a list of faces and update per-card statuses
+async function autoMarkFaces(faces) {
+    for (const face of faces) {
+        const userId = face.user_id;
+        if (!userId) continue;
+        if (processedToday.has(userId)) {
+            // Update UI as already processed in this session
+            updateFaceStatus(userId, 'Already marked today', 'already');
+            continue;
+        }
+        try {
+            const res = await fetch('/mark_attendance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            });
+            const result = await res.json();
+            if (result.success) {
+                processedToday.add(userId);
+                updateFaceStatus(userId, 'Marked now', 'success');
+            } else if (result.message === 'Attendance already marked today') {
+                processedToday.add(userId);
+                const time = result.marked_time ? new Date(`2000-01-01T${result.marked_time}`).toLocaleTimeString() : '';
+                updateFaceStatus(userId, time ? `Already marked at ${time}` : 'Already marked today', 'already');
+            } else {
+                updateFaceStatus(userId, result.message || 'Error marking', 'error');
+            }
+        } catch (e) {
+            console.error('Auto mark error:', e);
+            updateFaceStatus(userId, 'Network error', 'error');
+        }
+    }
+}
+
+function updateFaceStatus(userId, text, kind) {
+    const el = document.getElementById(`status_${userId}`) || document.getElementById('singleStatus');
+    if (!el) return;
+    el.textContent = text;
+    // Color coding
+    if (kind === 'success') {
+        el.className = 'text-sm text-green-600';
+    } else if (kind === 'already') {
+        el.className = 'text-sm text-yellow-600';
+    } else if (kind === 'error') {
+        el.className = 'text-sm text-red-600';
+    } else {
+        el.className = 'text-sm text-blue-600';
+    }
+}
+
+// Mark all selected attendance
+async function markAllAttendance() {
+    const checkboxes = document.querySelectorAll('.face-checkbox:checked');
+    const selectedUserIds = Array.from(checkboxes).map(cb => parseInt(cb.dataset.userId));
+    
+    if (selectedUserIds.length === 0) {
+        showError('Please select at least one person to mark attendance for.');
+        return;
+    }
+    
+    try {
+        updateStatus('Marking attendance...');
+        
+        const response = await fetch('/mark_multiple_attendance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_ids: selectedUserIds })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMultipleAttendanceSuccess(result);
+        } else {
+            showError(result.message);
+        }
+        
+    } catch (error) {
+        console.error('Error marking multiple attendance:', error);
+        showError('Failed to mark attendance. Please try again.');
+    }
+}
+
+// Reject all attendance
+function rejectAllAttendance() {
+    hideAllResults();
+    showNoFace();
+    detectedFaces = [];
+    updateStatus('Detection resumed...');
+}
+
+// Reject attendance (single)
+function rejectAttendance() {
+    hideAllResults();
+    showNoFace();
+    currentUser = null;
+    updateStatus('Detection resumed...');
+}
+
+// Show multiple attendance success
+function showMultipleAttendanceSuccess(result) {
+    hideAllResults();
+    document.getElementById('attendanceSuccess').classList.remove('hidden');
+    
+    const now = new Date();
+    let message = `Attendance marked for ${result.success_count} people`;
+    if (result.already_marked && result.already_marked.length > 0) {
+        message += ` (${result.already_marked.length} already marked today)`;
+    }
+    
+    document.getElementById('attendanceTime').textContent = 
+        `${message} at ${now.toLocaleTimeString()}`;
+    
+    updateStatus('Multiple attendance marked successfully');
+    
+    // Reset after 4 seconds
+    setTimeout(() => {
+        hideAllResults();
+        showNoFace();
+        detectedFaces = [];
+        updateStatus('Detection resumed...');
+    }, 4000);
+}
+
+// Show attendance success (single)
+function showAttendanceSuccess() {
+    hideAllResults();
+    document.getElementById('attendanceSuccess').classList.remove('hidden');
+    
+    const now = new Date();
+    document.getElementById('attendanceTime').textContent = 
+        `Marked at ${now.toLocaleTimeString()}`;
+    
+    updateStatus('Attendance marked successfully');
+    
+    // Reset after 3 seconds
+    setTimeout(() => {
+        hideAllResults();
+        showNoFace();
+        currentUser = null;
+        updateStatus('Detection resumed...');
+    }, 3000);
+}
+
+// Show already marked today
+function showAlreadyMarked(markedTime = null) {
+    hideAllResults();
+    document.getElementById('alreadyMarked').classList.remove('hidden');
+    
+    let timeText;
+    if (markedTime) {
+        // Format the time from the database
+        const time = new Date(`2000-01-01T${markedTime}`);
+        timeText = `Already marked today at ${time.toLocaleTimeString()}`;
+    } else {
+        const now = new Date();
+        timeText = `Already marked today at ${now.toLocaleTimeString()}`;
+    }
+    
+    document.getElementById('alreadyMarkedTime').textContent = timeText;
+    
+    updateStatus('Attendance already marked for today');
+    
+    // Reset after 4 seconds
+    setTimeout(() => {
+        hideAllResults();
+        showNoFace();
+        currentUser = null;
+        updateStatus('Detection resumed...');
+    }, 4000);
+}
+
+// Show no face detected
+function showNoFace() {
+    hideAllResults();
+    document.getElementById('noFace').classList.remove('hidden');
+}
+
+// Show error message
+function showError(message) {
+    hideAllResults();
+    document.getElementById('errorMessage').classList.remove('hidden');
+    document.getElementById('errorText').textContent = message;
+    updateStatus('Error occurred');
+}
+
+// Hide all result divs
+function hideAllResults() {
+    document.getElementById('noFace').classList.add('hidden');
+    document.getElementById('faceDetected').classList.add('hidden');
+    document.getElementById('multipleFaces').classList.add('hidden');
+    document.getElementById('userConfirmation').classList.add('hidden');
+    document.getElementById('attendanceSuccess').classList.add('hidden');
+    document.getElementById('alreadyMarked').classList.add('hidden');
+    document.getElementById('errorMessage').classList.add('hidden');
+}
+
+// Update status text
+function updateStatus(message) {
+    document.getElementById('status').textContent = message;
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', initCamera);
+</script>
+{% endblock %}
